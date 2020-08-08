@@ -1,0 +1,195 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# This program is dedicated to the public domain under the CC0 license.
+
+
+from io import BytesIO
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from instaloader import Instaloader, Profile
+import sys
+import shutil
+import glob
+import os
+import telegram
+from itertools import islice
+from math import ceil
+
+bot_token = os.environ.get("BOT_TOKEN", "")
+USER = os.environ.get("IGUSER", "")
+PASSWORD = os.environ.get("IGPASS", "")
+
+def start(update, context):
+    """Send a message when the command /start is issued."""
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text="<b>Hi There! 👋</b>\nI can download posts (pictures + videos) & stories from Instagram.\nPlease read /help before use.", parse_mode=telegram.ParseMode.HTML)
+
+
+def help_command(update, context):
+    """Send a message when the command /help is issued."""
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text="This bot can help you to download Posts (pictures + videos) & Stories from Instagram without leaving Telegram. Simply send a command with a Instagram username (handle) without '@'.\n\n<b>Available Commands :</b>\n/posts username - Download all posts from the username’s profile.\n/stories username - Download stories from the username’s profile.\n\n<b>How to find the username?</b>\nOpen Instagram app & then go to the profile that you want to download. Username must be on the top.\nIn case you are using a browser you can find it in the Address bar.\n<b>Example : </b>Username for instagram.com/rashmika_mandanna & @rashmika_mandanna is 'rashmika_mandanna' 😉", parse_mode=telegram.ParseMode.HTML)
+
+
+def about_command(update, context):
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text='''Made with ❤️ + python-telegram-bot & Instaloader.\nSource Code : <a href="https://github.com/NandiyaLive/IGStoryDLBot">GitHub</a>\n\n<b>TODO</b>\nAdd highlights & IGTV support.\nAdd download from a link support.''', parse_mode=telegram.ParseMode.HTML)
+
+
+def contact_command(update, context):
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text="Please contact me on @NandiyaX Chat.In case you want to PM please use @NandiyaBot.", parse_mode=telegram.ParseMode.HTML)
+
+
+def echo(update, context):
+    update.message.reply_text(
+        "You have to send a command with an username.\nRead /help before use.")
+
+
+def stories_command(update, context):
+
+    query = update.message.text.replace("/stories ", "")
+
+    L = Instaloader(dirname_pattern=query, download_comments=False,
+                    download_video_thumbnails=False, save_metadata=False)
+
+    try:
+        L.login(USER, PASSWORD)
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+
+        return
+
+    try:
+        profile = L.check_profile_id(query)
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+
+        return
+
+    update.message.reply_text(
+        "Searching for stories of : " + query + "\nInstagram ID : "+str(profile.userid))
+
+    try:
+        L.download_stories(userids=[profile.userid])
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+        return
+
+    src_dir = query
+    for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
+        context.bot.send_photo(
+            chat_id=update.message.chat_id, photo=open(jpgfile, 'rb'))
+
+    for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
+        context.bot.send_video(
+            chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
+
+    try:
+        shutil.rmtree(query)
+    except Exception:
+        pass
+
+
+def posts_command(update, context):
+
+    query = update.message.text.replace("/posts ", "")
+
+    L = Instaloader(dirname_pattern=query, download_comments=False,
+                    download_video_thumbnails=False, save_metadata=False, download_geotags=True, compress_json=True, post_metadata_txt_pattern=None, storyitem_metadata_txt_pattern=None)
+
+    update.message.reply_text("Searching for posts of : " + query)
+
+    update.message.reply_text(
+        "Cooking your request! This may take longer, take a nap I can handle this without you.")
+
+    profile = Profile.from_username(L.context, query)
+
+    posts = profile.get_posts()
+    try:
+        L.posts_download_loop(posts, query)
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+        return
+
+    src_dir = query
+
+    for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
+        context.bot.send_photo(
+            chat_id=update.message.chat_id, photo=open(jpgfile, 'rb'))
+
+    for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
+        context.bot.send_video(
+            chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
+
+    try:
+        shutil.rmtree(query)
+    except Exception:
+        pass
+
+
+def igtv_command(update, context):
+
+    query = update.message.text.replace("/igtv ", "")
+
+    L = Instaloader(dirname_pattern=query, download_comments=False,
+                    download_video_thumbnails=False, save_metadata=False, download_geotags=True, compress_json=True, post_metadata_txt_pattern=None, storyitem_metadata_txt_pattern=None)
+
+    update.message.reply_text("Searching for IGTV Videos of : " + query)
+
+    update.message.reply_text(
+        "Cooking your request! This may take longer, take a nap I can handle this without you.")
+
+    profile = Profile.from_username(L.context, query)
+
+    igtv = profile.get_igtv_posts()
+    try:
+        L.download_post(igtv, target=query)
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+        return
+
+    src_dir = query
+
+    for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
+        context.bot.send_photo(
+            chat_id=update.message.chat_id, photo=open(jpgfile, 'rb'))
+
+    for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
+        context.bot.send_video(
+            chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
+
+    try:
+        shutil.rmtree(query)
+    except Exception:
+        pass
+
+
+def main():
+    """Start the bot."""
+    updater = Updater(bot_token, use_context=True)
+
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("stories", stories_command))
+    dp.add_handler(CommandHandler("posts", posts_command))
+    dp.add_handler(CommandHandler("igtv", igtv_command))
+    dp.add_handler(CommandHandler("help", help_command))
+    dp.add_handler(CommandHandler("contact", contact_command))
+    dp.add_handler(CommandHandler("about", about_command))
+
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+
+    # Start the Bot
+    updater.start_polling()
+
+    updater.idle()
+
+
+if __name__ == '__main__':
+    main()
