@@ -147,7 +147,7 @@ def igtv_command(update, context):
 
     igtv = profile.get_igtv_posts()
     try:
-        L.download_post(igtv, target=query)
+        L.download_igtv(igtv, query)
     except Exception as e:
         context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
             e), parse_mode=telegram.ParseMode.HTML)
