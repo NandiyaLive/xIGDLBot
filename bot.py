@@ -103,8 +103,8 @@ def profile_command(update, context):
 
     media = profile.mediacount
 
-    update.message.reply_text("Searching for : " + query + "\nMedia Count : " + str(media) +
-                              "\n\nCooking your request 👨‍🍳 This may take longer, take a nap I can handle this without you.")
+    update.message.reply_text("Cooking your request 👨‍🍳\nProfile : " + query + "\nMedia Count : " + str(media) +
+                              "\nThis may take longer, take a nap I can handle this without you.")
 
     posts = profile.get_posts()
     try:
@@ -143,8 +143,8 @@ def igtv_command(update, context):
 
     posts = profile.get_igtv_posts()
 
-    update.message.reply_text("Searching for : " + query + "\nVideo Count : " +str(igtv_count)+
-                              "\n\nCooking IGTV videos 👨‍🍳 This may take longer, take a nap I can handle this without you.")
+    update.message.reply_text("Cooking your request 👨‍🍳\nProfile : " + query + "\nVideo Count : " +str(igtv_count)+
+                              "\nThis may take longer, take a nap I can handle this without you.")
 
     try:
         L.posts_download_loop(posts, query)
