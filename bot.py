@@ -103,7 +103,7 @@ def profile_command(update, context):
 
     media = profile.mediacount
 
-    update.message.reply_text("Searching for posts of : " + query + "\n Media Count : " + media +
+    update.message.reply_text("Searching for posts of : " + query + "\n Media Count : " + str(media) +
                               "\nCooking your request! This may take longer, take a nap I can handle this without you.")
 
     posts = profile.get_posts()
