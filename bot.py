@@ -21,18 +21,18 @@ PASSWORD = os.environ.get("IGPASS", "")
 def start(update, context):
     """Send a message when the command /start is issued."""
     context.bot.send_message(chat_id=update.message.chat_id,
-                             text="<b>Hi There! 👋</b>\nI can download posts (pictures + videos) & stories from Instagram.\nPlease read /help before use.", parse_mode=telegram.ParseMode.HTML)
+                             text="<b>Hi There! 👋</b>\nI can download all posts (pictures + videos) in a profile, IGTV Videos & Stories from Instagram.\nPlease read /help before use.", parse_mode=telegram.ParseMode.HTML)
 
 
 def help_command(update, context):
     """Send a message when the command /help is issued."""
     context.bot.send_message(chat_id=update.message.chat_id,
-                             text="This bot can help you to download Posts (pictures + videos) & Stories from Instagram without leaving Telegram. Simply send a command with a Instagram username (handle) without '@'.\n\n<b>Available Commands :</b>\n/posts username - Download all posts from the username’s profile.\n/stories username - Download stories from the username’s profile.\n\n<b>How to find the username?</b>\nOpen Instagram app & then go to the profile that you want to download. Username must be on the top.\nIn case you are using a browser you can find it in the Address bar.\n<b>Example : </b>Username for instagram.com/rashmika_mandanna & @rashmika_mandanna is 'rashmika_mandanna' 😉", parse_mode=telegram.ParseMode.HTML)
+                             text="This bot can help you to download all posts (pictures + videos) in a profile, IGTV Videos & Stories from Instagram without leaving Telegram. Simply send a command with a Instagram username (handle) without '@'.\n\n<b>Available Commands :</b>\n/profile username - Download all posts from the username’s profile.\n/igtv username - Download IGTV Videos from the username’s profile.\n\n<b>How to find the username?</b>\nOpen Instagram app & then go to the profile that you want to download. Username must be on the top.\nIn case you are using a browser you can find it in the Address bar.\n<b>Example : </b>Username for instagram.com/rashmika_mandanna & @rashmika_mandanna is 'rashmika_mandanna' 😉", parse_mode=telegram.ParseMode.HTML)
 
 
 def about_command(update, context):
     context.bot.send_message(chat_id=update.message.chat_id,
-                             text='''Made with ❤️ + python-telegram-bot & Instaloader.\nSource Code : <a href="https://github.com/NandiyaLive/IGStoryDLBot">GitHub</a>\n\n<b>TODO</b>\nAdd highlights & IGTV support.\nAdd download from a link support.''', parse_mode=telegram.ParseMode.HTML)
+                             text='''Made with ❤️ + python-telegram-bot & Instaloader.\nSource Code : <a href="https://github.com/NandiyaLive/xIGDLBot">GitHub</a>\n\n<b>Readme File : https://bit.ly/xIGDLBot''', parse_mode=telegram.ParseMode.HTML)
 
 
 def contact_command(update, context):
@@ -93,19 +93,18 @@ def stories_command(update, context):
         pass
 
 
-def posts_command(update, context):
+def profile_command(update, context):
 
-    query = update.message.text.replace("/posts ", "")
+    query = update.message.text.replace("/profile ", "")
 
     L = Instaloader(dirname_pattern=query, download_comments=False,
                     download_video_thumbnails=False, save_metadata=False, download_geotags=True, compress_json=True, post_metadata_txt_pattern=None, storyitem_metadata_txt_pattern=None)
-
-    update.message.reply_text("Searching for posts of : " + query)
-
-    update.message.reply_text(
-        "Cooking your request! This may take longer, take a nap I can handle this without you.")
-
     profile = Profile.from_username(L.context, query)
+
+    media = profile.mediacount
+
+    update.message.reply_text("Searching for posts of : " + query + "\n Media Count : " + media +
+                              "\nCooking your request! This may take longer, take a nap I can handle this without you.")
 
     posts = profile.get_posts()
     try:
@@ -138,16 +137,17 @@ def igtv_command(update, context):
     L = Instaloader(dirname_pattern=query, download_comments=False,
                     download_video_thumbnails=False, save_metadata=False, download_geotags=True, compress_json=True, post_metadata_txt_pattern=None, storyitem_metadata_txt_pattern=None)
 
-    update.message.reply_text("Searching for IGTV Videos of : " + query)
-
-    update.message.reply_text(
-        "Cooking your request! This may take longer, take a nap I can handle this without you.")
-
     profile = Profile.from_username(L.context, query)
 
-    igtv = profile.get_igtv_posts()
+    igtv_count = profile.igtvcount
+
+    posts = profile.get_igtv_posts()
+
+    update.message.reply_text("Searching for : " + query +
+                              "\nCooking "+str(igtv_count)+" IGTV videos! This may take longer, take a nap I can handle this without you.")
+
     try:
-        L.download_igtv(igtv, query)
+        L.posts_download_loop(posts, query)
     except Exception as e:
         context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
             e), parse_mode=telegram.ParseMode.HTML)
@@ -177,7 +177,7 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("stories", stories_command))
-    dp.add_handler(CommandHandler("posts", posts_command))
+    dp.add_handler(CommandHandler("profile", profile_command))
     dp.add_handler(CommandHandler("igtv", igtv_command))
     dp.add_handler(CommandHandler("help", help_command))
     dp.add_handler(CommandHandler("contact", contact_command))
