@@ -95,39 +95,53 @@ def stories_command(update, context):
 
 def profile_command(update, context):
 
-    query = update.message.text.replace("/profile ", "")
+    LIST_OF_ADMINS = os.environ.get("ADMINS", "")
 
-    L = Instaloader(dirname_pattern=query, download_comments=False,
-                    download_video_thumbnails=False, save_metadata=False, download_geotags=True, compress_json=True, post_metadata_txt_pattern=None, storyitem_metadata_txt_pattern=None)
-    profile = Profile.from_username(L.context, query)
+    user_id = update.effective_user.id
 
-    media = profile.mediacount
-
-    update.message.reply_text("Cooking your request 👨‍🍳\nProfile : " + query + "\nMedia Count : " + str(media) +
-                              "\nThis may take longer, take a nap I can handle this without you.")
-
-    posts = profile.get_posts()
-    try:
-        L.posts_download_loop(posts, query)
-    except Exception as e:
-        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
-            e), parse_mode=telegram.ParseMode.HTML)
+    if user_id not in LIST_OF_ADMINS:
+        context.bot.send_message(chat_id=update.message.chat_id, text="Unauthorized! Access denied for {}".format(
+            user_id) + ''' 🔒\n<b>Sorry!</b> Administrator has blocked you from running this command to give fair usage to everyone 😔\nPlease refer @NandiyaX''', parse_mode=telegram.ParseMode.HTML)
         return
 
-    src_dir = query
+    else:
+        query = update.message.text.replace("/profile ", "")
 
-    for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
-        context.bot.send_photo(
-            chat_id=update.message.chat_id, photo=open(jpgfile, 'rb'))
+        L = Instaloader(dirname_pattern=query, download_comments=False,
+                        download_video_thumbnails=False, save_metadata=False, download_geotags=True, compress_json=True, post_metadata_txt_pattern=None, storyitem_metadata_txt_pattern=None)
+        profile = Profile.from_username(L.context, query)
 
-    for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
-        context.bot.send_video(
-            chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
+        media = profile.mediacount
+        update.message.reply_text("Cooking your request 👨‍🍳\nProfile : " + query + "\nMedia Count : " + str(media) +
+                                  "\nThis may take longer, take a nap I can handle this without you.")
 
-    try:
-        shutil.rmtree(query)
-    except Exception:
-        pass
+        posts = profile.get_posts()
+        try:
+            L.posts_download_loop(posts, query)
+        except Exception as e:
+            context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+                e), parse_mode=telegram.ParseMode.HTML)
+            return
+
+        src_dir = query
+
+        for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
+            context.bot.send_photo(
+                chat_id=update.message.chat_id, photo=open(jpgfile, 'rb'))
+
+        for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
+            context.bot.send_video(
+                chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
+
+        try:
+            shutil.rmtree(query)
+        except Exception:
+            pass
+
+
+def post_command(update, context):
+    context.bot.send_message(chat_id=update.message.chat_id,
+                             text="<b>No commands needed.</b>\nThanks to Telegram you can download it from the message 😂❤️", parse_mode=telegram.ParseMode.HTML)
 
 
 def igtv_command(update, context):
@@ -143,8 +157,8 @@ def igtv_command(update, context):
 
     posts = profile.get_igtv_posts()
 
-    update.message.reply_text("Cooking your request 👨‍🍳\nProfile : " + query + "\nVideo Count : " +str(igtv_count)+
-                              "\nThis may take longer, take a nap I can handle this without you.")
+    update.message.reply_text("Searching for : " + query +
+                              "\nCooking "+str(igtv_count)+" IGTV videos! This may take longer, take a nap I can handle this without you.")
 
     try:
         L.posts_download_loop(posts, query)
@@ -178,6 +192,7 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("stories", stories_command))
     dp.add_handler(CommandHandler("profile", profile_command))
+    dp.add_handler(CommandHandler("post", post_command))
     dp.add_handler(CommandHandler("igtv", igtv_command))
     dp.add_handler(CommandHandler("help", help_command))
     dp.add_handler(CommandHandler("contact", contact_command))
