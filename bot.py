@@ -18,6 +18,7 @@ bot_token = os.environ.get("BOT_TOKEN", "")
 USER = os.environ.get("IGUSER", "")
 PASSWORD = os.environ.get("IGPASS", "")
 
+
 def start(update, context):
     """Send a message when the command /start is issued."""
     context.bot.send_message(chat_id=update.message.chat_id,
@@ -95,7 +96,7 @@ def stories_command(update, context):
 
 def profile_command(update, context):
 
-    LIST_OF_ADMINS = [497217416, 754321334]
+    LIST_OF_ADMINS = os.environ['BUILD_VER'] = str(row)
 
     user_id = update.effective_user.id
 
