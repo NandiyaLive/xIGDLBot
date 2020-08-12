@@ -95,9 +95,8 @@ def stories_command(update, context):
 
 
 def profile_command(update, context):
-    set(int(x) for x in os.environ.get("ADMINS", "").split())
     
-    LIST_OF_ADMINS = x
+    LIST_OF_ADMINS = set(int(x) for x in os.environ.get("ADMINS", "").split())
 
     user_id = update.effective_user.id
 
