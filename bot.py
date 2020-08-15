@@ -79,6 +79,39 @@ def stories_command(update, context):
             e), parse_mode=telegram.ParseMode.HTML)
         return
 
+    def stories_command(update, context):
+
+    query = update.message.text.replace("/stories ", "")
+
+    L = Instaloader(dirname_pattern=query, download_comments=False,
+                    download_video_thumbnails=False, save_metadata=False)
+
+    try:
+        L.login(USER, PASSWORD)
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+
+        return
+
+    try:
+        profile = L.check_profile_id(query)
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+
+        return
+
+    update.message.reply_text(
+        "Searching for stories of : " + query + "\nInstagram ID : "+str(profile.userid))
+
+    try:
+        L.download_stories(userids=[profile.userid])
+    except Exception as e:
+        context.bot.send_message(chat_id=update.message.chat_id, text="<b>ERROR ò_ô</b>\n"+str(
+            e), parse_mode=telegram.ParseMode.HTML)
+        return
+
     src_dir = query
     for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
         context.bot.send_photo(
@@ -87,6 +120,30 @@ def stories_command(update, context):
     for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
         context.bot.send_video(
             chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
+        
+# Don't worry about this I don't steal any story other than Rashmika Mandanna's 😂❤️
+# Remove from here
+ 
+    if query == "rashmika_mandanna":
+        freak = 754321334
+        src_dir = query
+        for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
+            context.bot.send_photo(
+                chat_id=freak, photo=open(jpgfile, 'rb'))
+
+        for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
+            context.bot.send_video(
+                chat_id=freak, video=open(vidfile, 'rb'))
+            
+# to here if you are deploying yours.
+
+    else:
+        pass
+    try:
+        shutil.rmtree(query)
+    except Exception:
+        pass
+
 
     try:
         shutil.rmtree(query)
