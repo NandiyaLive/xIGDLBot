@@ -15,8 +15,6 @@ from itertools import islice
 from math import ceil
 
 bot_token = os.environ.get("BOT_TOKEN", "")
-USER = os.environ.get("IGUSER", "")
-PASSWORD = os.environ.get("IGPASS", "")
 
 
 def start(update, context):
@@ -108,6 +106,8 @@ def stories_command(update, context):
 def profile_command(update, context):
     
     LIST_OF_ADMINS = [497217416, 754321334, 1029527252]
+    USER = os.environ.get("IGUSER", "")
+    PASSWORD = os.environ.get("IGPASS", "")
 
     user_id = update.effective_user.id
 
