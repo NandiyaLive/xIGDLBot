@@ -47,6 +47,9 @@ def stories_command(update, context):
 
     query = update.message.text.replace("/stories ", "")
 
+    USER = os.environ.get("IGUSER", "")
+    PASSWORD = os.environ.get("IGPASS", "")
+    
     L = Instaloader(dirname_pattern=query, download_comments=False,
                     download_video_thumbnails=False, save_metadata=False)
 
@@ -106,8 +109,6 @@ def stories_command(update, context):
 def profile_command(update, context):
     
     LIST_OF_ADMINS = [497217416, 754321334, 1029527252]
-    USER = os.environ.get("IGUSER", "")
-    PASSWORD = os.environ.get("IGPASS", "")
 
     user_id = update.effective_user.id
 
