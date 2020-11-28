@@ -34,7 +34,7 @@ def stories(update, context):
     if status.find("div", class_="status status--ok"):
         fullmsg = update.message.text
         
-        if fullmgs == "/stories":
+        if fullmsg == "/stories":
             update.message.reply_text('/stories [instagram username]\nPlease read /help')
         else :
             mgs = fullmsg.replace("/stories ", "")
