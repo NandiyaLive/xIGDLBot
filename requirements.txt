@@ -1,2 +1,4 @@
 python-telegram-bot
-instaloader
+bs4
+lxml
+requests
