@@ -37,7 +37,7 @@ def stories(update, context):
         if fullmsg == "/stories":
             update.message.reply_text('/stories [instagram username]\nPlease read /help')
         else :
-            mgs = fullmsg.replace("/stories ", "")
+            msg = fullmsg.replace("/stories ", "")
             chat_id = update.message.chat_id
 
             if "@" in msg.lower():
