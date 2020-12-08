@@ -132,10 +132,6 @@ def igtv(update, context):
 
     src_dir = query
 
-    for jpgfile in glob.iglob(os.path.join(src_dir, "*.jpg")):
-        context.bot.send_photo(
-            chat_id=update.message.chat_id, photo=open(jpgfile, 'rb'))
-
     for vidfile in glob.iglob(os.path.join(src_dir, "*.mp4")):
         context.bot.send_video(
             chat_id=update.message.chat_id, video=open(vidfile, 'rb'))
@@ -187,8 +183,9 @@ def feed(update, context):
 
     update.message.reply_text("Uploading to Telegram...")
 
-    context.bot.send_document(chat_id=update.message.chat_id,
-                              document=open(f"{query}.zip", 'rb'))
+    for zip_file in glob.glob("*.zip"):
+        context.bot.send_document(chat_id=update.message.chat_id,
+                                  document=open(zip_file, 'rb'))
 
     try:
         shutil.rmtree(query)
