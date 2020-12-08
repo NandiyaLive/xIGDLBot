@@ -2,3 +2,4 @@ python-telegram-bot
 bs4
 lxml
 requests
+instaloader
